@@ -1,0 +1,13 @@
+Deadlock scenarios:
+
+1. Thread 1 stuck in open and Thread 2 stuck in ioctl(line 154 in assignment6.c)
+Spawn 2 threads. Both are in mode1 and will call open() and increment count1 to 2. T1 will down(sem1), up(sem1) and then down(sem2) and return. T2 will down(sem1), up(sem1) and then try to down(sem2) but T1 is holding sem2, so T2 is stuck. T1 then calls ioctl to change mode to mode2. Since count1 > 1, it will go into the while loop and go to the wait queue1 waiting for count1 == 1. Both T1 and T2 are stuck.This same deadlock situation can be achieved by running it on multiple processes.
+
+2. Thread 1 and Thread 2 stuck in wait queue2 (line 174 in assignment6.c)
+Main Thread opens() in mode1 and count1=1. Main thread calls ioctl for mode2 and count1=0. Spawn 2 threads. Both call open() and will make count2=2. Both the thread will call ioctl to change mode to 1. Since count2>1, T1 will wait in queue2 for count2==1 (releasing sem1). T2 will take sem1 and also wait in queue2 for count2==1. So a deadlock has occured.
+
+3.Deadlock if 2 threads try to change mode in ioctl() - Line 147
+Main thread calls open() with mode 1 -> count1 = 1 -> thread calls ioctl() to change to Mode 2 -> count1 = 0. Main thread spawns two threads of Mode 2 -> count2 = 2. T1 and T2 calls ioctl() to change to Mode 1 but count2> 1 -> T1 acquires sem 1 -> wait in queue until count2 ==1 -> T1 Release sem 1. T2 acquires sem 1 -> wait in queue until count2 ==1 -> T2 Release sem 1. Both threads are waiting in queue and cannot reach the condition, hence deadlock occured
+
+4. Main thread calls open() in mode 1 and then changes the mode to mode2 calling ioctl(). 
+2 threads are spawned and then using pthread_barrier_wait() the threads are synchronized and both the threads enter ioctl() at the same time to change to mode 1. This causes a deadlock.
